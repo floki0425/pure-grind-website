@@ -12,6 +12,7 @@ function OrderForm() {
   const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [deliveryOption, setDeliveryOption] = useState("Lalamove / Grab / Toktok");
   const [proofOfPayment, setProofOfPayment] = useState(null);
+  const [isSubmitting,setIsSubmitting] = useState();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -58,7 +59,40 @@ function OrderForm() {
       return;
     }
 
+    setIsSubmitting(true);
+    
     const orderNumber = `PG-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
+    let proofOfPaymentUrl = null;
+
+if (paymentMethod !== "COD" && proofOfPayment) {
+  const fileExt = proofOfPayment.name.split(".").pop();
+  const fileName = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.${fileExt}`;
+
+  const filePath = `proofs/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("payment-proofs")
+    .upload(filePath, proofOfPayment, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Proof upload error:", uploadError);
+    alert(`Proof of payment upload failed: ${uploadError.message}`);
+    setIsSubmitting(false);
+    return;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("payment-proofs")
+    .getPublicUrl(filePath);
+
+  proofOfPaymentUrl = publicUrlData.publicUrl;
+}
 
 const newOrder = {
   order_number: orderNumber,
@@ -73,7 +107,7 @@ const newOrder = {
   delivery_option: deliveryOption,
 
   // temporary muna, file name lang muna
-  proof_of_payment_url: proofOfPayment ? proofOfPayment.name : null,
+  proof_of_payment_url: proofOfPaymentUrl,
 
   customer_name: formData.fullName,
   phone: formData.phone,
