@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { brand, product } from "../../lib/constants";
-import OrderSummary from "./OrderSummary";
 import { supabase } from "../../lib/supabaseClient";
+import OrderSummary from "./OrderSummary";
 
 function OrderForm() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ function OrderForm() {
   const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [deliveryOption, setDeliveryOption] = useState("Lalamove / Grab / Toktok");
   const [proofOfPayment, setProofOfPayment] = useState(null);
-  const [isSubmitting,setIsSubmitting] = useState();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -23,8 +23,6 @@ function OrderForm() {
     landmark: "",
     notes: "",
   });
-
-  
 
   const subtotal = quantity * brand.pricePerPack;
 
@@ -45,8 +43,7 @@ function OrderForm() {
     setQuantity((prev) => Math.max(1, prev - 1));
   }
 
-
-   async function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
@@ -59,88 +56,85 @@ function OrderForm() {
       return;
     }
 
-    isSubmitting(true)
-    
-    const orderNumber = `PG-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+    try {
+      setIsSubmitting(true);
 
-    let proofOfPaymentUrl = null;
+      const orderNumber = `PG-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
-if (paymentMethod !== "COD" && proofOfPayment) {
-  const fileExt = proofOfPayment.name.split(".").pop();
-  const fileName = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2)}.${fileExt}`;
+      let proofOfPaymentUrl = null;
 
-  const filePath = `proofs/${fileName}`;
+      if (paymentMethod !== "COD" && proofOfPayment) {
+        const fileExt = proofOfPayment.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2)}.${fileExt}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("payment-proofs")
-    .upload(filePath, proofOfPayment, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+        const filePath = `proofs/${fileName}`;
 
-  if (uploadError) {
-    console.error("Proof upload error:", uploadError);
-    alert(`Proof of payment upload failed: ${uploadError.message}`);
-    setIsSubmitting(false);
-    return;
-  }
+        const { error: uploadError } = await supabase.storage
+          .from("payment-proofs")
+          .upload(filePath, proofOfPayment, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-  const { data: publicUrlData } = supabase.storage
-    .from("payment-proofs")
-    .getPublicUrl(filePath);
+        if (uploadError) {
+          console.error("Proof upload error:", uploadError);
+          alert(`Proof of payment upload failed: ${uploadError.message}`);
+          return;
+        }
 
-  proofOfPaymentUrl = publicUrlData.publicUrl;
-}
+        const { data: publicUrlData } = supabase.storage
+          .from("payment-proofs")
+          .getPublicUrl(filePath);
 
-const newOrder = {
-  order_number: orderNumber,
-  product_name: brand.name,
-  flavor: flavor,
-  quantity: quantity,
-  price_per_pack: brand.pricePerPack,
-  subtotal: subtotal,
-  payment_method: paymentMethod,
-  payment_status: paymentMethod === "COD" ? "COD" : "Pending",
-  order_status: "New Order",
-  delivery_option: deliveryOption,
+        proofOfPaymentUrl = publicUrlData.publicUrl;
+      }
 
-  // temporary muna, file name lang muna
-  proof_of_payment_url: proofOfPaymentUrl,
+      const newOrder = {
+        order_number: orderNumber,
+        product_name: brand.name,
+        flavor,
+        quantity,
+        price_per_pack: brand.pricePerPack,
+        subtotal,
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === "COD" ? "COD" : "Pending",
+        order_status: "New Order",
+        delivery_option: deliveryOption,
+        proof_of_payment_url: proofOfPaymentUrl,
+        customer_name: formData.fullName,
+        phone: formData.phone,
+        email: formData.email || null,
+        address: formData.address,
+        city: formData.city,
+        landmark: formData.landmark || null,
+        notes: formData.notes || null,
+      };
 
-  customer_name: formData.fullName,
-  phone: formData.phone,
-  email: formData.email || null,
-  address: formData.address,
-  city: formData.city,
-  landmark: formData.landmark || null,
-  notes: formData.notes || null,
-};
+      const { data, error } = await supabase
+        .from("orders")
+        .insert([newOrder])
+        .select()
+        .single();
 
-const { data, error } = await supabase
-  .from("orders")
-  .insert([newOrder])
-  .select()
-  .single();
+      console.log("New order payload:", newOrder);
+      console.log("Insert data:", data);
+      console.log("Insert error:", error);
 
-console.log("New order payload:", newOrder);
-console.log("Insert data:", data);
-console.log("Insert error:", error);
+      if (error) {
+        alert(`Order failed: ${error.message}`);
+        return;
+      }
 
-if (error) {
-  alert(`Order failed: ${error.message}`);
-  return;
-}
-
-localStorage.setItem("latestOrder", JSON.stringify(data));
-
-navigate("/thank-you");
-
-    
-
-
-    navigate("/thank-you");
+      localStorage.setItem("latestOrder", JSON.stringify(data));
+      navigate("/thank-you");
+    } catch (err) {
+      console.error("Unexpected order error:", err);
+      alert("Something went wrong while submitting your order.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -157,6 +151,7 @@ navigate("/thank-you");
                 <label className="text-sm font-black text-[#25382B]">
                   Select Flavor
                 </label>
+
                 <select
                   value={flavor}
                   onChange={(e) => setFlavor(e.target.value)}
@@ -200,8 +195,9 @@ navigate("/thank-you");
             </div>
 
             <div className="mt-5 rounded-2xl bg-[#DDE8D2] p-4 text-sm leading-6 text-[#25382B]">
-              Free delivery may apply for orders of <strong>12 packs and above</strong>.
-              Current delivery area: <strong>Metro Manila</strong>.
+              Free delivery may apply for orders of{" "}
+              <strong>12 packs and above</strong>. Current delivery area:{" "}
+              <strong>Metro Manila</strong>.
             </div>
           </div>
 
@@ -212,7 +208,10 @@ navigate("/thank-you");
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               <div>
-                <label className="text-sm font-black text-[#25382B]">Full Name</label>
+                <label className="text-sm font-black text-[#25382B]">
+                  Full Name
+                </label>
+
                 <input
                   name="fullName"
                   value={formData.fullName}
@@ -226,6 +225,7 @@ navigate("/thank-you");
                 <label className="text-sm font-black text-[#25382B]">
                   Contact Number
                 </label>
+
                 <input
                   name="phone"
                   value={formData.phone}
@@ -237,8 +237,10 @@ navigate("/thank-you");
 
               <div>
                 <label className="text-sm font-black text-[#25382B]">
-                  Email Address <span className="font-normal text-[#777]">(optional)</span>
+                  Email Address{" "}
+                  <span className="font-normal text-[#777]">(optional)</span>
                 </label>
+
                 <input
                   name="email"
                   value={formData.email}
@@ -249,7 +251,10 @@ navigate("/thank-you");
               </div>
 
               <div>
-                <label className="text-sm font-black text-[#25382B]">City / Area</label>
+                <label className="text-sm font-black text-[#25382B]">
+                  City / Area
+                </label>
+
                 <input
                   name="city"
                   value={formData.city}
@@ -263,6 +268,7 @@ navigate("/thank-you");
                 <label className="text-sm font-black text-[#25382B]">
                   Complete Address
                 </label>
+
                 <input
                   name="address"
                   value={formData.address}
@@ -274,8 +280,10 @@ navigate("/thank-you");
 
               <div>
                 <label className="text-sm font-black text-[#25382B]">
-                  Landmark <span className="font-normal text-[#777]">(optional)</span>
+                  Landmark{" "}
+                  <span className="font-normal text-[#777]">(optional)</span>
                 </label>
+
                 <input
                   name="landmark"
                   value={formData.landmark}
@@ -289,6 +297,7 @@ navigate("/thank-you");
                 <label className="text-sm font-black text-[#25382B]">
                   Delivery Option
                 </label>
+
                 <select
                   value={deliveryOption}
                   onChange={(e) => setDeliveryOption(e.target.value)}
@@ -303,8 +312,10 @@ navigate("/thank-you");
 
               <div className="md:col-span-2">
                 <label className="text-sm font-black text-[#25382B]">
-                  Order Notes <span className="font-normal text-[#777]">(optional)</span>
+                  Order Notes{" "}
+                  <span className="font-normal text-[#777]">(optional)</span>
                 </label>
+
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -333,6 +344,7 @@ navigate("/thank-you");
                   }`}
                 >
                   <span className="font-black text-[#25382B]">{method}</span>
+
                   <input
                     type="radio"
                     name="paymentMethod"
@@ -349,6 +361,7 @@ navigate("/thank-you");
                 <label className="text-sm font-black text-[#25382B]">
                   Upload Proof of Payment
                 </label>
+
                 <input
                   type="file"
                   accept="image/*"
@@ -357,8 +370,7 @@ navigate("/thank-you");
                 />
 
                 <p className="mt-2 text-xs leading-5 text-[#555]">
-                  Required for GCash, Maya, and Bank Transfer. Actual upload to
-                  Supabase will be added later.
+                  Required for GCash, Maya, and Bank Transfer.
                 </p>
               </div>
             )}
@@ -370,9 +382,10 @@ navigate("/thank-you");
 
             <button
               type="submit"
-              className="mt-7 w-full rounded-full bg-[#D96C2C] px-7 py-4 font-black text-white shadow-sm transition hover:opacity-90"
+              disabled={isSubmitting}
+              className="mt-7 w-full rounded-full bg-[#D96C2C] px-7 py-4 font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Place Order
+              {isSubmitting ? "Submitting Order..." : "Place Order"}
             </button>
           </div>
         </div>

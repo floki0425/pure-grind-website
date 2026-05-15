@@ -10,6 +10,9 @@ function AdminDashboard() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+const [paymentFilter, setPaymentFilter] = useState("All");
+const [orderFilter, setOrderFilter] = useState("All");
 
   async function fetchOrders() {
     setLoading(true);
@@ -79,6 +82,63 @@ checkSessionAndFetchOrders();
     ["Total Commission", `₱${totalCommission}`],
   ];
 
+  const filteredOrders = orders.filter((order) => {
+  const matchesSearch =
+    order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const matchesPayment =
+    paymentFilter === "All" || order.payment_status === paymentFilter;
+
+  const matchesOrder =
+    orderFilter === "All" || order.order_status === orderFilter;
+
+  return matchesSearch && matchesPayment && matchesOrder;
+});
+
+function exportCSV() {
+  const headers = [
+    "Order Number",
+    "Customer",
+    "Phone",
+    "Flavor",
+    "Quantity",
+    "Subtotal",
+    "Payment Method",
+    "Payment Status",
+    "Order Status",
+    "Created At",
+  ];
+
+  const rows = filteredOrders.map((order) => [
+    order.order_number,
+    order.customer_name,
+    order.phone,
+    order.flavor,
+    order.quantity,
+    order.subtotal,
+    order.payment_method,
+    order.payment_status,
+    order.order_status,
+    order.created_at,
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((item) => `"${item ?? ""}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "pure-grind-orders.csv";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
   return (
     <main className="min-h-screen bg-[#F8F1E7] px-4 py-5 text-[#2B2B2B] sm:px-5">
       <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
@@ -102,13 +162,23 @@ checkSessionAndFetchOrders();
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={fetchOrders}
-              className="w-full rounded-full bg-[#D96C2C] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 sm:w-auto"
-            >
-              Refresh Orders
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+  <button
+    type="button"
+    onClick={fetchOrders}
+    className="w-full rounded-full bg-[#D96C2C] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 sm:w-auto"
+  >
+    Refresh Orders
+  </button>
+
+  <button
+    type="button"
+    onClick={exportCSV}
+    className="w-full rounded-full bg-[#25382B] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 sm:w-auto"
+  >
+    Export CSV
+  </button>
+</div>
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -126,28 +196,39 @@ checkSessionAndFetchOrders();
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <input
-              placeholder="Search order/customer..."
-              className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none sm:col-span-2"
-            />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search order/customer/phone..."
+                className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none sm:col-span-2"
+              />
 
-            <select className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none">
-              <option>All Payment Status</option>
-              <option>Pending</option>
-              <option>Paid</option>
-              <option>COD</option>
-            </select>
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none"
+              >
+                <option value="All">All Payment Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="COD">COD</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
 
-            <select className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none">
-              <option>All Order Status</option>
-              <option>New Order</option>
-              <option>Confirmed</option>
-              <option>Preparing</option>
-              <option>Shipped</option>
-              <option>Delivered</option>
-              <option>Cancelled</option>
-            </select>
-          </div>
+              <select
+                value={orderFilter}
+                onChange={(e) => setOrderFilter(e.target.value)}
+                className="w-full rounded-2xl border border-[#D8D0C3] bg-white px-4 py-3 text-sm outline-none"
+              >
+                <option value="All">All Order Status</option>
+                <option value="New Order">New Order</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Preparing">Preparing</option>
+                <option value="Shipped / Out for Delivery">Shipped / Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
 
           <div className="mt-5 min-w-0">
             {loading ? (
@@ -155,7 +236,7 @@ checkSessionAndFetchOrders();
                 <p className="font-black text-[#25382B]">Loading orders...</p>
               </div>
             ) : (
-              <OrderTable orders={orders} />
+              <OrderTable orders={filteredOrders} />
             )}
           </div>
         </section>
