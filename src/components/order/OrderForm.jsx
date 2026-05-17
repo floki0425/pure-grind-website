@@ -113,22 +113,26 @@ function OrderForm() {
         notes: formData.notes || null,
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("orders")
-        .insert([newOrder])
-        .select()
-        .single();
+        .insert([newOrder]);
 
       console.log("New order payload:", newOrder);
-      console.log("Insert data:", data);
       console.log("Insert error:", error);
 
       if (error) {
-        setSubmitError(`Order failed: ${error.message}`);;
+        setSubmitError(`Order failed: ${error.message}`);
         return;
       }
 
-      localStorage.setItem("latestOrder", JSON.stringify(data));
+      localStorage.setItem(
+        "latestOrder",
+        JSON.stringify({
+          ...newOrder,
+          created_at: new Date().toISOString(),
+        })
+      );
+
       navigate("/thank-you");
     } catch (err) {
       console.error("Unexpected order error:", err);
