@@ -308,6 +308,15 @@ checkSessionAndFetchOrder();
                 </button>
 
                 <button
+                  onClick={() =>
+                    updateOrderStatus("order_status", "Shipped / Out for Delivery")
+                  }
+                  className="w-full rounded-full bg-[#25382B] px-5 py-3 text-sm font-black text-white"
+                >
+                  Mark as Shipped / Out for Delivery
+                </button>
+
+                <button
                   onClick={async () => {
                     await updateOrderStatus("payment_status", "Cancelled");
                     await updateOrderStatus("order_status", "Cancelled");
