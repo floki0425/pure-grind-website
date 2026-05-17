@@ -13,6 +13,7 @@ function OrderForm() {
   const [deliveryOption, setDeliveryOption] = useState("Lalamove / Grab / Toktok");
   const [proofOfPayment, setProofOfPayment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -47,7 +48,7 @@ function OrderForm() {
     event.preventDefault();
 
     if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
-      alert("Please complete your name, phone number, address, and city.");
+      setSubmitError("Please complete your name, phone number, address, and city.");
       return;
     }
 
@@ -123,7 +124,7 @@ function OrderForm() {
       console.log("Insert error:", error);
 
       if (error) {
-        alert(`Order failed: ${error.message}`);
+        setSubmitError(`Order failed: ${error.message}`);;
         return;
       }
 
@@ -131,7 +132,7 @@ function OrderForm() {
       navigate("/thank-you");
     } catch (err) {
       console.error("Unexpected order error:", err);
-      alert("Something went wrong while submitting your order.");
+        setSubmitError(`Something went wrong: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -408,6 +409,12 @@ function OrderForm() {
                 </div>
               )}
             </div>
+
+              {submitError && (
+                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold leading-6 text-red-700">
+                  {submitError}
+                </div>
+              )}
 
             <button
               type="submit"
