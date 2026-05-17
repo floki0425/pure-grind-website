@@ -218,30 +218,11 @@ checkSessionAndFetchOrder();
                 <Detail label="Subtotal" value={formatPeso(order.subtotal)} />
               </InfoCard>
 
-              <InfoCard title="Payment Details">
+             <InfoCard title="Payment Details">
                 <Detail label="Payment Method" value={order.payment_method} />
                 <Detail label="Payment Status" value={order.payment_status} />
-                <p className="break-words leading-6">
-                  <span className="font-black text-[#25382B]">Proof of Payment:</span>{" "}
-                  {order.proof_of_payment_url &&
-                  order.proof_of_payment_url.startsWith("http") ? (
-                    <a
-                      href={order.proof_of_payment_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-bold text-[#D96C2C] underline"
-                    >
-                      View uploaded proof
-                    </a>
-                  ) : order.proof_of_payment_url ? (
-                    <span className="text-[#555]">
-                      {order.proof_of_payment_url} — not uploaded to storage yet
-                    </span>
-                  ) : (
-                    <span className="text-[#555]">N/A</span>
-                  )}
-                </p>
-              </InfoCard>
+                <ProofPreview url={order.proof_of_payment_url} />
+             </InfoCard>
 
               <InfoCard title="Delivery Details">
                 <Detail
@@ -366,6 +347,57 @@ function SummaryRow({ label, value }) {
       <span className="break-words text-right font-black text-[#25382B]">
         {value}
       </span>
+    </div>
+  );
+}
+
+function ProofPreview({ url }) {
+  if (!url) {
+    return (
+      <p className="break-words leading-6">
+        <span className="font-black text-[#25382B]">Proof of Payment:</span>{" "}
+        <span className="text-[#555]">N/A</span>
+      </p>
+    );
+  }
+
+  if (!url.startsWith("http")) {
+    return (
+      <p className="break-words leading-6">
+        <span className="font-black text-[#25382B]">Proof of Payment:</span>{" "}
+        <span className="text-[#555]">
+          {url} — not uploaded to storage yet
+        </span>
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="break-words leading-6">
+        <span className="font-black text-[#25382B]">Proof of Payment:</span>{" "}
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="font-bold text-[#D96C2C] underline"
+        >
+          Open full image
+        </a>
+      </p>
+
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="block overflow-hidden rounded-2xl border border-[#D8D0C3] bg-[#F8F1E7]"
+      >
+        <img
+          src={url}
+          alt="Proof of payment"
+          className="max-h-[320px] w-full object-contain p-2"
+        />
+      </a>
     </div>
   );
 }
