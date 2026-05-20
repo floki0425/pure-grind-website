@@ -2,7 +2,7 @@ import Footer from "../components/layout/Footer"
 import Header from "../components/layout/Header"
 import OrderForm from "../components/order/OrderForm"
 import { brand, product } from "../lib/constants"
-import productImage from "../assets/product.png"
+import productImage from "../assets/product-order.png"
 
 
 const Order = () => {
@@ -11,14 +11,12 @@ const Order = () => {
       <Header />
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[0.9fr_1fr_0.75fr] lg:items-start">
-        <div className="rounded-[2rem] border border-[#D8D0C3] bg-white p-6 shadow-sm">
-          <div className="flex aspect-square items-center justify-center rounded-[1.5rem] bg-[#DDE8D2] p-6">
+        <div className="rounded-xl border border-[#D8D0C3] bg-white p-6 shadow-sm">
            <img
               src={productImage}
               alt="Pure Grind Protein Chips"
               className="max-h-full object-contain drop-shadow-xl"
             />
-          </div>
         </div>
 
         <div>
