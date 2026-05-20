@@ -25,6 +25,8 @@ function Header() {
           <a href="/#flavors">Flavors</a>
           <a href="/#how-to-order">How to Order</a>
           <a href="/#faq">FAQ</a>
+           <a href="/track-order">Track Order</a>
+
         </nav>
 
         <Link

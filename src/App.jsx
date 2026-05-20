@@ -5,6 +5,7 @@ import ThankYou from "./pages/ThankYou";
 import AdminLogin from "./pages/AdminLogin";
 import OrderDetails from "./pages/OrderDetails";
 import AdminDashboard from "./components/admin/AdminDashboard";
+import TrackOrder from "./pages/TrackOrder";
 
 
 
@@ -17,6 +18,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/order" element={<Order />} />
         <Route path="/thank-you" element={<ThankYou />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/orders/:id" element={<OrderDetails />} />
