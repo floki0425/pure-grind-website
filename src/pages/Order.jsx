@@ -2,7 +2,7 @@ import Footer from "../components/layout/Footer"
 import Header from "../components/layout/Header"
 import OrderForm from "../components/order/OrderForm"
 import { brand, product } from "../lib/constants"
-import productImage from "../assets/product.jpg"
+import productImage from "../assets/product.png"
 
 
 const Order = () => {
