@@ -24,15 +24,12 @@ const Hero = () => {
         {/* Overlay for readability */}
         <div className="absolute inset-0 bg-[#F8F1E7]/55 md:bg-[#F8F1E7]/25" />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F8F1E7]/35 via-[#F8F1E7]/35 to-[#F8F1E7]/75 md:bg-gradient-to-r md:from-[#F8F1E7]/75 md:via-[#F8F1E7]/35 md:to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#F8F1E7]/35 via-[#F8F1E7]/35 to-[#F8F1E7]/75 md:bg-linear-to-r md:from-[#F8F1E7]/75 md:via-[#F8F1E7]/35 md:to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
+      <div className="relative z-10  mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
         <div>
-          <p className="mb-4 inline-flex rounded-full bg-[#DDE8D2] px-4 py-2 text-sm font-black text-[#25382B]">
-            {product.protein} Protein • {product.calories} Calories •{" "}
-            {product.packSize} Pack
-          </p>
+          
 
           <h1 className="text-5xl font-black leading-[0.95] tracking-tight text-[#25382B] sm:text-6xl lg:text-7xl">
             Crunch. <br />
@@ -66,16 +63,7 @@ const Hero = () => {
             </a>
           </div>
 
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            {["High Protein", "Low Fat", "7 Flavors"].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-[#D8D0C3] bg-white/90 p-4 text-center shadow-sm backdrop-blur"
-              >
-                <p className="text-sm font-black text-[#25382B]">{item}</p>
-              </div>
-            ))}
-          </div>
+        
         </div>
 
         <div className="relative flex items-center justify-center lg:min-h-[620px]">
