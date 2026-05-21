@@ -93,25 +93,20 @@ function OrderForm() {
       }
 
       const newOrder = {
-        order_number: orderNumber,
-        product_name: brand.name,
-        flavor,
-        quantity,
-        price_per_pack: brand.pricePerPack,
-        subtotal,
-        payment_method: paymentMethod,
-        payment_status: paymentMethod === "COD" ? "COD" : "Pending",
-        order_status: "New Order",
-        delivery_option: deliveryOption,
-        proof_of_payment_url: proofOfPaymentUrl,
-        customer_name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email || null,
-        address: formData.address,
-        city: formData.city,
-        landmark: formData.landmark || null,
-        notes: formData.notes || null,
-      };
+          order_number: orderNumber,
+          flavor,
+          quantity,
+          payment_method: paymentMethod,
+          delivery_option: deliveryOption,
+          proof_of_payment_url: proofOfPaymentUrl,
+          customer_name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email || null,
+          address: formData.address,
+          city: formData.city,
+          landmark: formData.landmark || null,
+          notes: formData.notes || null,
+        };
 
       const { error } = await supabase
         .from("orders")
@@ -129,6 +124,11 @@ function OrderForm() {
         "latestOrder",
         JSON.stringify({
           ...newOrder,
+          product_name: brand.name,
+          price_per_pack: brand.pricePerPack,
+          subtotal,
+          payment_status: paymentMethod === "COD" ? "COD" : "Pending",
+          order_status: "New Order",
           created_at: new Date().toISOString(),
         })
       );
